@@ -1,6 +1,38 @@
 import { toast } from "sonner";
 import axiosInstance from "../api/axiosInstance.js";
 
+// Fetch all withdrawal requests with populated user info
+export async function fetchAllWithdrawals() {
+  try {
+    const { data } = await axiosInstance.get('/api/wallet/all');
+    return data;
+  } catch (error) {
+    toast.error("Failed to fetch withdrawals");
+    console.error(error);
+  }
+}
+
+// Fetch full user KYC details by user ID
+export async function fetchUserKYCService(userId) {
+  try {
+    const { data } = await axiosInstance.get(`/api/user/kyc/${userId}`);
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Update withdrawal status (approve/reject)
+export async function updateWithdrawalStatus(withdrawalId, status) {
+  try {
+    const { data } = await axiosInstance.put(`/api/wallet/status/${withdrawalId}`, { status });
+    toast.success("Withdrawal status updated");
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 //new urls
 
 export async function getUsersDashboard() {

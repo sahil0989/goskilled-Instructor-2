@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CalendarDays, IndianRupee, Newspaper, X } from 'lucide-react';
+import { CalendarDays, IndianRupee, Newspaper, Wallet2Icon, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 // eslint-disable-next-line
@@ -14,6 +14,7 @@ import AdminKYCPanel from '../components/AdminKYCDashboard';
 import AdminUsersPage from '../components/instructor-view';
 import BlogDashboard from '../components/blogs section/BlogDashboard';
 import MeetingDashboard from '../components/meeting/MeetingDashboard';
+import AdminWithdrawals from '../components/WalletWithdraw';
 
 export default function Dashboard() {
     const { user, logout, courses } = useAuth();
@@ -72,6 +73,12 @@ export default function Dashboard() {
         label: "Blogs",
         value: "blogs",
         component: <BlogDashboard />,
+    },
+    {
+        icon: Wallet2Icon,
+        label: "Wallet",
+        value: "wallet",
+        component: <AdminWithdrawals />,
     },
     {
         icon: CalendarDays,
