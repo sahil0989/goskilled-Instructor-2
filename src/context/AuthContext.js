@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
   const fetchUserLeaderboard = async () => {
     try {
       const data = await getUsersDashboard();
+      console.log("DAta ", data)
       setLeaderboard(data);
     } catch (error) {
       console.error("Error fetching users:", error);
