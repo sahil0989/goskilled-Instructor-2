@@ -1,22 +1,37 @@
 import { useEffect, useState } from "react";
 import { Button } from "../../@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const AdminUsersPage = () => {
-  const { leaderboard } = useAuth();
+  const { leaderboard, fetchUserLeaderboard } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalReferrals, setTotalReferrals] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 10;
+  const [usersPerPage, setUsersPerPage] = useState(10);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+      navigate("/");
+    } else {
+      fetchUserLeaderboard()
+    }
+    // eslint-disable-next-line
+  }, [navigate]);
 
   const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       if (leaderboard) {
+        console.log(leaderboard)
         setUsers(leaderboard);
         const total = leaderboard.reduce((acc, user) => acc + (user.totalReferrals || 0), 0);
         setTotalReferrals(total);
@@ -30,7 +45,7 @@ const AdminUsersPage = () => {
 
   useEffect(() => {
     fetchUsers();
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
   }, [leaderboard]);
 
   const handleSort = (field) => {
@@ -60,10 +75,11 @@ const AdminUsersPage = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ["Name", "Phone Number", "Email", "Total Referrals", "Registered At"];
+    const headers = ["Name", "Phone Number", "Email", "Unique Code", "Wallet Balance", "Total Earnings", "Direct Referrals", "Registered At"];
     const rows = users.map(user => [
       `"${user.name || ""}"`,
       `"${user.mobileNumber || ""}"`,
+      `"${user.uniqueCode || ""}"`,
       `"${user.email || ""}"`,
       `"${user.totalReferrals || 0}"`,
       `"${new Date(user.createdAt).toLocaleDateString("en-IN", {
@@ -85,10 +101,21 @@ const AdminUsersPage = () => {
     document.body.removeChild(link);
   };
 
+  // Filter users before pagination
+  const filteredUsers = users.filter((user) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      user.name?.toLowerCase().includes(query) ||
+      user.email?.toLowerCase().includes(query) ||
+      user.mobileNumber?.includes(query) ||
+      user.uniqueCode?.toLowerCase().includes(query)
+    );
+  });
+
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(users.length / usersPerPage);
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   const SkeletonRow = () => (
     <tr className="border-t">
@@ -102,8 +129,9 @@ const AdminUsersPage = () => {
 
   return (
     <div className="w-full space-y-6">
-      {/* Stats Cards */}
       <h1 className="text-xl sm:text-2xl font-bold">Admin Dashboard</h1>
+
+      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
         <div className="bg-blue-100 md:px-12 py-6 rounded-lg shadow text-center flex flex-col sm:flex-row items-center justify-between">
           <h2 className="text-lg font-semibold">Total Users</h2>
@@ -115,11 +143,27 @@ const AdminUsersPage = () => {
         </div>
       </div>
 
-      {/* Users Table */}
+      {/* Table */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl font-bold">Users Overview</h1>
-          <div className="flex justify-end">
+
+          <div className="flex gap-4">
+            <Button onClick={() => { setUsersPerPage(10); setCurrentPage(1); toast.success("10 user per page"); }} className={`${usersPerPage === 10 ? "bg-green-700" : ""} shadow-lg`}>10</Button>
+            <Button onClick={() => { setUsersPerPage(50); setCurrentPage(1); toast.success("50 user per page"); }} className={`${usersPerPage === 50 ? "bg-green-700" : ""} shadow-lg`}>50</Button>
+            <Button onClick={() => { setUsersPerPage(100); setCurrentPage(1); toast.success("100 user per page"); }} className={`${usersPerPage === 100 ? "bg-green-700" : ""} shadow-lg`}>100</Button>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <input
+              type="text"
+              placeholder="Search unique code, name, email and phone"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="border px-3 py-2 rounded-md w-full sm:w-64"
+            />
             <Button
               onClick={exportToCSV}
               disabled={loading}
@@ -134,47 +178,44 @@ const AdminUsersPage = () => {
           <table className="min-w-full text-sm text-left">
             <thead className="bg-gray-100 text-xs uppercase text-gray-700">
               <tr>
+                <th className="p-4 border">S. No</th>
                 <th className="p-4 border">
                   <div className="flex items-center gap-2">
                     Name
-                    <div className="flex w-full justify-between items-center">
-                      <div></div>
-                      <div
-                        onClick={() => handleSort("name")}
-                        className="px-5 py-1 shadow-lg bg-gray-400 rounded-lg text-xl font-bold cursor-pointer"
-                      >
-                        {sortField === "name" ? (sortOrder === "asc" ? "↑" : "↓") : "↕"}
-                      </div>
+                    <div
+                      onClick={() => handleSort("name")}
+                      className="px-2 cursor-pointer text-xl font-bold"
+                    >
+                      {sortField === "name" ? (sortOrder === "asc" ? "↑" : "↓") : "↕"}
                     </div>
                   </div>
                 </th>
+                <th className="p-4 border">Unique Code</th>
                 <th className="p-4 border">Phone Number</th>
                 <th className="p-4 border">Email</th>
+                <th className="p-4 border">Total Balance</th>
+                <th className="p-4 border">Total Earning</th>
                 <th className="p-4 border">
-                  <div className="flex items-center flex-nowrap gap-2">
-                    <span className="flex flex-nowrap w-full">Total Referrals</span>
-                    <div className="flex items-center justify-between w-full">
-                      <div></div>
-                      <div
-                        onClick={() => handleSort("totalReferrals")}
-                        className="px-5 py-1 shadow-lg bg-gray-400 rounded-lg text-xl font-bold cursor-pointer"
-                      >
-                        {sortField === "totalReferrals" ? (sortOrder === "asc" ? "↑" : "↓") : "↕"}
-                      </div>
+                  <div className="flex items-center gap-2">
+                    Level 1 Referrals
+                    <div
+                      onClick={() => handleSort("totalReferrals")}
+                      className="px-2 cursor-pointer text-xl font-bold"
+                    >
+                      {sortField === "totalReferrals" ? (sortOrder === "asc" ? "↑" : "↓") : "↕"}
                     </div>
                   </div>
                 </th>
+                <th className="p-4 border">Level 2 Referrals</th>
+                <th className="p-4 border">Level 3 Referrals</th>
                 <th className="p-4 border">
                   <div className="flex items-center gap-2">
-                    <span className="flex flex-nowrap w-full">Registered At</span>
-                    <div className="flex items-center justify-between w-full">
-                      <div></div>
-                      <div
-                        onClick={() => handleSort("createdAt")}
-                        className="px-5 py-1 shadow-lg bg-gray-400 rounded-lg text-xl font-bold cursor-pointer"
-                      >
-                        {sortField === "createdAt" ? (sortOrder === "asc" ? "↑" : "↓") : "↕"}
-                      </div>
+                    Registered At
+                    <div
+                      onClick={() => handleSort("createdAt")}
+                      className="px-2 cursor-pointer text-xl font-bold"
+                    >
+                      {sortField === "createdAt" ? (sortOrder === "asc" ? "↑" : "↓") : "↕"}
                     </div>
                   </div>
                 </th>
@@ -184,12 +225,18 @@ const AdminUsersPage = () => {
             <tbody className={`bg-white ${loading ? "animate-pulse" : ""}`}>
               {loading
                 ? Array.from({ length: usersPerPage }).map((_, i) => <SkeletonRow key={i} />)
-                : currentUsers.map((user) => (
+                : currentUsers.map((user, idx) => (
                   <tr key={user._id} className="border-t">
+                    <td className="p-4 border">{indexOfFirstUser + idx + 1}</td>
                     <td className="p-4 border">{user.name}</td>
+                    <td className="p-4 border">{user.uniqueCode || "—"}</td> {/* Unique Code */}
                     <td className="p-4 border">{user.mobileNumber}</td>
                     <td className="p-4 border">{user.email}</td>
-                    <td className="p-4 border">{user.totalReferrals || 0}</td>
+                    <td className="p-4 border">{user.wallet?.balance}</td>
+                    <td className="p-4 border">{user.wallet?.totalEarned}</td>
+                    <td className="p-4 border">{user.level1_referrals}</td>
+                    <td className="p-4 border">{user.level2_referrals}</td>
+                    <td className="p-4 border">{user.level3_referrals}</td>
                     <td className="p-4 border">
                       {new Date(user.createdAt).toLocaleDateString("en-IN", {
                         day: "2-digit",
@@ -203,7 +250,7 @@ const AdminUsersPage = () => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
+        {/* Pagination */}
         <div className="flex justify-between items-center mt-4">
           <button
             className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"

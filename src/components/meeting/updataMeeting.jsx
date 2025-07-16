@@ -132,7 +132,7 @@ const AddOrEditMeeting = () => {
                 toast.success("Meeting created successfully!");
             }
 
-            navigate("/dashboard", { state: { tab: "meetings" } });
+            navigate("/dashboard/meetings");
         } catch {
             toast.error("Failed to save meeting");
         } finally {
@@ -207,7 +207,7 @@ const AddOrEditMeeting = () => {
                 <div className="flex justify-start gap-4">
                     <button
                         type="button"
-                        onClick={() => navigate("/dashboard", { state: { tab: "meetings" } })}
+                        onClick={() => navigate("/dashboard/meetings", { state: { tab: "meetings" } })}
                         className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded font-medium"
                     >
                         Cancel

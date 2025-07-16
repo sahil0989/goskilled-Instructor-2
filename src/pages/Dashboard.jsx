@@ -1,142 +1,69 @@
-import { useEffect, useState } from 'react'
-import { CalendarDays, IndianRupee, Newspaper, Wallet2Icon, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-// eslint-disable-next-line
-import { BarChart, Book, LogOut, User, Menu } from 'lucide-react';
-// eslint-disable-next-line
-import InstructorCourses from '../components/courses';
+import { Outlet, useNavigate, NavLink } from 'react-router-dom';
 import { Button } from '../@/components/ui/button';
-import { useInstructor } from '../context/instructor-context/InstructorContext';
-// eslint-disable-next-line
-import AdminPayments from '../components/PaymentComponent';
-import AdminKYCPanel from '../components/AdminKYCDashboard';
-import AdminUsersPage from '../components/instructor-view';
-import BlogDashboard from '../components/blogs section/BlogDashboard';
-import MeetingDashboard from '../components/meeting/MeetingDashboard';
-import AdminWithdrawals from '../components/WalletWithdraw';
+import { CalendarDays, IndianRupee, Newspaper, Wallet2Icon, LogOut, User, BarChart, Book, Menu, X, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
-export default function Dashboard() {
-    const { user, logout, courses } = useAuth();
+export default function DashboardLayout() {
+    const { logout } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('dashboard');
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    // eslint-disable-next-line
-    const [loading, setLoading] = useState(true);
-    // eslint-disable-next-line
-    const { instructorCoursesList, setInstructorCoursesList } = useInstructor();
-
-    // eslint-disable-next-line
-    async function fetchAllCourses() {
-        setLoading(true);
-        if (courses?.success) {
-            setInstructorCoursesList(courses?.data);
-        }
-        setLoading(false);
-    }
-
-    useEffect(() => {
-        fetchAllCourses();
-        // eslint-disable-next-line
-    }, [courses]);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (!storedUser) {
-            navigate("/")
+            navigate("/");
         }
-    }, [user, navigate]);
+    }, [navigate]);
 
     const menuItems = [
-    {
-        icon: BarChart,
-        label: "Dashboard",
-        value: "dashboard",
-        component: (<AdminUsersPage />),
-    },
-    {
-        icon: Book,
-        label: "Courses",
-        value: "courses",
-        component: loading
-            ? <SkeletonLoader />
-            : <InstructorCourses listOfCourses={instructorCoursesList} />,
-    },
-    {
-        icon: IndianRupee,
-        label: "Payments",
-        value: "payments",
-        component: <AdminPayments />,
-    },
-    {
-        icon: Newspaper,
-        label: "Blogs",
-        value: "blogs",
-        component: <BlogDashboard />,
-    },
-    {
-        icon: Wallet2Icon,
-        label: "Wallet",
-        value: "wallet",
-        component: <AdminWithdrawals />,
-    },
-    {
-        icon: CalendarDays,
-        label: "Meetings",
-        value: "meetings",
-        component: <MeetingDashboard />,
-    },
-    {
-        icon: User,
-        label: "KYC Approval",
-        value: "kycpannel",
-        component: <AdminKYCPanel />,
-    },
-    {
-        icon: LogOut,
-        label: "Logout",
-        value: "logout",
-        component: null,
-    },
-];
+        { icon: BarChart, label: "Dashboard", path: "/dashboard" },
+        { icon: Users, label: "Users", path: "/dashboard/users" },
+        { icon: Book, label: "Courses", path: "/dashboard/courses" },
+        { icon: IndianRupee, label: "Payments", path: "/dashboard/payments" },
+        { icon: Newspaper, label: "Blogs", path: "/dashboard/blogs" },
+        { icon: Wallet2Icon, label: "Wallet", path: "/dashboard/wallet" },
+        { icon: CalendarDays, label: "Meetings", path: "/dashboard/meetings" },
+        { icon: User, label: "KYC Approval", path: "/dashboard/kyc" },
+        { icon: LogOut, label: "Logout", action: logout },
+    ];
 
     return (
         <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] bg-gray-100">
             {/* Sidebar */}
-            <aside
-                className={`md:w-64 w-full h-[calc(100vh-80px)] bg-white p-4 md:block ${sidebarOpen ? 'block' : 'hidden'
-                    } md:relative absolute z-20 shadow-lg`}
-            >
-                {/* Close Button for Mobile */}
+            <aside className={`md:w-64 w-full bg-white p-4 md:block ${sidebarOpen ? 'block' : 'hidden'} md:relative absolute z-20 shadow-lg`}>
                 <div className="flex justify-between items-center mb-4 md:hidden">
                     <h2 className='text-xl font-bold'>Instructor View</h2>
-                    <Button variant="ghost" onClick={() => setSidebarOpen(false)}>
-                        <X className="h-5 w-5" />
-                    </Button>
+                    <Button variant="ghost" onClick={() => setSidebarOpen(false)}><X className="h-5 w-5" /></Button>
                 </div>
-
-                {/* Heading for Desktop */}
                 <h2 className='text-2xl font-bold mb-4 hidden md:block'>Instructor View</h2>
 
                 <nav>
-                    {menuItems.map((item) => (
-                        <Button
-                            key={item.value}
-                            onClick={item.value === 'logout' ? logout : () => {
-                                setActiveTab(item.value);
-                                setSidebarOpen(false);
-                            }}
-                            variant={activeTab === item.value ? "secondary" : "ghost"}
-                            className="w-full justify-start mb-2"
-                        >
-                            <item.icon className='mr-2 h-4 w-4' />
-                            {item.label}
-                        </Button>
+                    {menuItems.map((item, idx) => (
+                        <div key={idx} className="mb-2">
+                            {item.path ? (
+                                <NavLink
+                                    to={item.path}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-2 w-full px-4 py-2 rounded ${isActive ? 'bg-gray-200' : 'hover:bg-gray-100'}`
+                                    }
+                                    onClick={() => setSidebarOpen(false)}
+                                >
+                                    <item.icon className="h-4 w-4" />
+                                    {item.label}
+                                </NavLink>
+                            ) : (
+                                <Button onClick={item.action} variant="ghost" className="w-full justify-start">
+                                    <item.icon className="h-4 w-4 mr-2" />
+                                    {item.label}
+                                </Button>
+                            )}
+                        </div>
                     ))}
                 </nav>
             </aside>
 
-            {/* Mobile toggle button */}
+            {/* Mobile Header */}
             <div className="flex items-center justify-between p-4 md:hidden bg-white shadow-sm">
                 <h1 className="text-xl font-semibold">Dashboard</h1>
                 <Button variant="ghost" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -145,29 +72,9 @@ export default function Dashboard() {
             </div>
 
             {/* Main content */}
-            <main className="flex-1 p-4 overflow-y-auto space-y-8">
-                <div className="max-w-7xl mx-auto space-y-8">
-                    {menuItems.map((item) => (
-                        activeTab === item.value && item.component ? (
-                            <section key={item.value}>
-                                {item.component}
-                            </section>
-                        ) : null
-                    ))}
-                </div>
+            <main className="flex-1 p-4 overflow-y-auto">
+                <Outlet />
             </main>
-
-        </div>
-    );
-}
-
-// eslint-disable-next-line
-function SkeletonLoader() {
-    return (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, idx) => (
-                <div key={idx} className="h-48 bg-gray-200 animate-pulse rounded-lg"></div>
-            ))}
         </div>
     );
 }

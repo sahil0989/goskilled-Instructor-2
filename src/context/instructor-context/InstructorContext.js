@@ -1,10 +1,10 @@
 import { createContext, useContext, useState } from "react";
-import { courseCurriculumInitialFromData, courseLandingInitialFormData } from "../../config";
+import { courseLandingInitialFormData, getEmptyCurriculum } from "../../config";
 const InstructorContext = createContext(null);
 
 export const InstructorProvider = ({ children }) => {
   const [courseLandingFormData, setCourseLandingFormData] = useState(courseLandingInitialFormData);
-  const [courseCurriculumFormData, setCourseCurriculumFormData] = useState(courseCurriculumInitialFromData);
+  const [courseCurriculumFormData, setCourseCurriculumFormData] = useState(getEmptyCurriculum());
   const [mediaUploadProgress, setMediaUploadProgress] = useState(false);
   const [mediaUploadProgressPercentage, setMediaUploadProgressPercentage] = useState(0);
   const [instructorCoursesList, setInstructorCoursesList] = useState([]);

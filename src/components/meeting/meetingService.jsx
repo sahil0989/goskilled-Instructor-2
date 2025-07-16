@@ -32,10 +32,18 @@ export const getMeetings = async () => {
     }
 };
 
+export const getParticipantsData = async (id) => {
+    try {
+        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/admin/meetings/${id}/registrations`);
+        return { success: true, data: res.data };   
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
 // ✅ Get a single meeting by ID
 export const getMeetingById = async (id) => {
     try {
-        console.log(id)
         const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/admin/meetings/${id}`);
         return { success: true, data: res.data };
     } catch (error) {
