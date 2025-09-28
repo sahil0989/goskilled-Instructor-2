@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { fetchAllCourses, getUsersDashboard } from "../services";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const AuthContext = createContext(null);
 
@@ -9,6 +10,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [courses, setCourses] = useState(null)
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,6 +20,7 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(storedUser));
       fetchUserLeaderboard();
       fetchAdminAllCourses();
+      fetchDashboardAnalysis()
     }
   }, []);
 
@@ -41,6 +45,18 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const fetchDashboardAnalysis = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/admin/analytics`);
+      console.log(res.data);
+      setData(res.data);
+    } catch (error) {
+      console.error("Error fetching dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchAdminAllCourses = async () => {
     try {
       const data = await fetchAllCourses();
@@ -53,7 +69,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, leaderboard, courses, fetchAdminAllCourses,fetchUserLeaderboard }}>
+    <AuthContext.Provider value={{ user, login, logout, leaderboard, courses, fetchAdminAllCourses, fetchUserLeaderboard, data, loading }}>
       {children}
     </AuthContext.Provider>
   );

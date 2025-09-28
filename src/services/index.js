@@ -70,6 +70,19 @@ export async function addNewCourseService(formData) {
   return data;
 }
 
+export const updateCourseStatus = async (courseId, data) => {
+  try {
+    const { data: response } = await axiosInstance.put(
+      `/admin/courses/update/${courseId}`,
+      data
+    );
+    return response; // already parsed JSON
+  } catch (err) {
+    console.error("Error updating course status:", err);
+    return { success: false, message: "Failed to update course status" };
+  }
+};
+
 export async function fetchInstructorCourseDetailsService(id) {
   const { data } = await axiosInstance.get(
     `/admin/courses/get/details/${id}`

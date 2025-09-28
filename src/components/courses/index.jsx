@@ -22,7 +22,7 @@ import {
     courseLandingInitialFormData,
 } from "../../config";
 import { toast } from "sonner";
-import { deleteParticularCourse } from "../../services";
+import { deleteParticularCourse, updateCourseStatus } from "../../services";
 import { useAuth } from "../../context/AuthContext";
 
 function InstructorCourses() {
@@ -109,6 +109,28 @@ function InstructorCourses() {
         navigate(`/instructor/edit-course/${id}`);
     };
 
+    const handleToggleStatus = useCallback(
+        async (id, currentStatus) => {
+            const newStatus = currentStatus === "live" ? "draft" : "live";
+            try {
+                setLoading(true);
+                const response = await updateCourseStatus(id, { status: newStatus }); // API call
+                console.log("REs: ", response);
+                if (response?.success) {
+                    toast.success(`Course ${newStatus === "live" ? "published" : "saved as draft"} successfully`);
+                    await fetchAdminAllCourses(); // Refresh list
+                } else {
+                    toast.error(response?.message || "Failed to update course status");
+                }
+            } catch (err) {
+                toast.error("Internal Server Error");
+            } finally {
+                setLoading(false);
+            }
+        },
+        [fetchAdminAllCourses]
+    );
+
     return (
         <Card className="w-full">
             <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -128,6 +150,7 @@ function InstructorCourses() {
                                 <TableHead>Carrer Price</TableHead>
                                 <TableHead>Students</TableHead>
                                 <TableHead>Revenue (Standard Plan)</TableHead>
+                                <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -143,11 +166,24 @@ function InstructorCourses() {
                                 courses.map((course) => (
                                     <TableRow key={course._id}>
                                         <TableCell className="font-medium">{course.title || "Untitled Course"}</TableCell>
-                                        <TableCell>₹{course.pricing?.standard ?? 0}</TableCell>
-                                        <TableCell>₹{course.pricing?.premium ?? 0}</TableCell>
-                                        <TableCell>{course.students?.length ?? 0}</TableCell>
                                         <TableCell>
-                                            ₹{(course.students?.length ?? 0) * (course.pricing?.standard ?? 0)}
+                                            <div className="text-center">₹{course.pricing?.standard ?? 0}</div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="text-center">₹{course.pricing?.premium ?? 0}</div>
+                                        </TableCell>
+                                        <TableCell><div className="text-center">{course.students?.length ?? 0}</div></TableCell>
+                                        <TableCell>
+                                            <div className=" text-center">₹{(course.students?.length ?? 0) * (course.pricing?.standard ?? 0)}</div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button
+                                                onClick={() => handleToggleStatus(course._id, course.status)}
+                                                variant="outline"
+                                                size="sm"
+                                            >
+                                                {course.status === "live" ? "Unpublish" : "Publish"}
+                                            </Button>
                                         </TableCell>
                                         <TableCell className="text-right flex justify-end space-x-2">
                                             <Button
